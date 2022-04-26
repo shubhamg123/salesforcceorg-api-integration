@@ -1,0 +1,94 @@
+create a class named create lead in salesforce with contents:
+@RESTResource(urlMapping='/CreateLead/')
+global  class CreateLeadApi
+{
+    @HTTPPost
+    global static list<lead> createlead1()
+    {  list<lead> jj=new list<lead>();
+     list<id> pp=new list<id>();
+     list<string> firstnamelist=new list<string>();
+         list<string> lastnamelist=new list<string>();
+         list<string> company=new list<string>();
+       string fname,lname,comp;
+        string fieldname,fieldvalue;
+       RestRequest req=RestContext.request;
+       RestResponse res=RestContext.response; 
+       string jsonbody=req.requestBody.toString();
+     
+    // Map<String,Object> mp = JSON.deserializeUntyped(jsonbody);
+     
+       system.debug('body is'+jsonbody);
+       jsonparser parser=json.createParser(jsonbody);
+        while(parser.nexttoken()!=null)
+        {
+            if(parser.getCurrentToken() !=jsontoken.END_OBJECT)
+            {
+                fieldname=parser.getCurrentName();
+                 fieldvalue=parser.gettext();
+                if(fieldname=='firstname' && fieldvalue!='firstname')
+                {  
+                   system.debug(fieldvalue);
+                    firstnamelist.add(fieldvalue);
+                }
+                else if(fieldname=='lastname' && fieldvalue!='lastname')
+                { 
+                {
+                    lastnamelist.add(fieldvalue);
+                }}
+                else if(fieldname=='company' && fieldvalue!='company')
+                { 
+                {
+                    company.add(fieldvalue);                    
+                }   
+                }
+                //jj.add(new lead(firstname=fname,lastname=lname,company=comp));
+                
+            }
+        }
+      //  lead l=new lead(firstname=fname,lastname=lname,company=comp);
+      System.debug(firstnamelist);
+       for(integer i=0;i<company.size();i++)
+       {
+          jj.add(new lead(firstname=firstnamelist[i],lastname=lastnamelist[i],company=company[i])); 
+       }insert jj;
+          system.debug(jj);
+       // for(lead kk:jj)
+       // {pp.add(kk.id);
+       // }
+       return jj;
+
+    }}
+    this is the salesforce api, with post method,we have to add json body with request header and in respponse this api will create lead and return  the list of lead created.
+    now we have created an api in salesforce ,we need to call it.we caqn use workbench or postman.
+    
+   to use workbench login on workbench go to rest exploror and slelect method as post and type url as -/services/apexrest/cas8/createlead(case sensitive) and give body as in json format
+   {"firstname":"shubham","lastname":"bhyargvaa","company":"dfv","firstname":"shruti","lastname":"bhargava","company":"sister"}
+   now the createlead api(a class) in salesforce will create two leads object records in return the records in json format.
+   
+   to use postman :install it
+   step1-create a connected app in salesforcev org(fromn app manager),with the help of which external system(here postman) communicate with sfdc server.
+   step-2-enable oauth2 setting using oauth we will login from postman
+   step3-write callback url as-https:/www.getpostman.com/oauth2/callback(to get instance url in postman using access token)
+   step-4-after creating connencted app save the consumer key and consumer seret .in you user setting find secret token.
+   step5-to get access token from salesforce first in  postman select get method and type url as-https://login.salesforce.com/services/oauth2/token and give body--->x-www-form-urlencoded
+   grant_type-password
+   client_id-(what you get from connected app)
+   consumer_key-(what you get from connected app)
+   username-shubham@abc.com
+   password-userpassword+secret token of user
+   
+   step-6:send the request after this you will get a access token and an instance url,now using that instance url and access token you can call the create lead api by :
+    select post method in that instance url and set headers as  
+    grant_type-password
+   client_id-(what you get from connected app)
+   consumer_key-(what you get from connected app)
+   username-shubham@abc.com
+   password-userpassword+secret token of user
+   authentication-bearer access token
+   content type-applicaton/json
+   and in body - {"firstname":"shubham","lastname":"bhyargvaa","company":"dfv","firstname":"shruti","lastname":"bhargava","company":"sister"},send the request you createlead api in salesforce will create lead records and rfeturn the list.
+   
+   
+   
+   
+   
