@@ -1,0 +1,68 @@
+weather api trigger
+trigger weatherapicallout on Account (after insert,after update) {
+    system.debug(trigger.new);
+    system.debug(trigger.old);
+   if(trigger.isinsert)
+   {  
+       if(trigger.isafter)
+       {
+           for(account ax:trigger.new)
+           {
+               id f=ax.id;
+               weatherapi.main(f);
+           }
+       }}else       
+       if(trigger.isupdate)
+       {  
+           system.debug(trigger.new);
+        system.debug(trigger.old);
+       
+       for(account ax:trigger.old)
+           {   
+           {  if(weatherapi.valid==true)
+           { id f=ax.id;
+               system.debug(f);
+               weatherapi.main(f);
+           }}
+
+           
+       }
+       }}
+       weather api apex class
+       public class weatherapi {
+    public static boolean valid=true;//to prevent recursion
+    @future(callout=true)
+ public static void main(id i)
+ {   valid=false;
+     account fd=[select id,cas8__city__c,cas8__country__c,cas8__state__c from account where id=:i limit 1];
+     http g=new http();
+     httprequest fdr=new httprequest();
+     string dd=fd.cas8__country__c;
+     string dr=fd.cas8__city__c;
+     fdr.setEndpoint('https://community-open-weather-map.p.rapidapi.com/weather?q='+dr+','+dd+'&lang=en&units=imperial&mode=json');
+     fdr.setHeader('X-RapidAPI-Host','community-open-weather-map.p.rapidapi.com');
+     fdr.setHeader('X-RapidAPI-Key', 'ff38b2e680msh965ba51f20f9359p17d3aajsn7b206fa9c89e');
+     fdr.setmethod('GET');
+     httpresponse res=g.send(fdr);
+     string res1=res.getBody();
+   
+     system.debug(res1);
+     //jsonparser gf=json.createParser(res1);
+     map<string,object> df=(map<string,object>)json.deserializeUntyped(res1);
+     map<string,object> df1=(map<string,object>)df.get('main');
+     decimal fd32=(decimal)df1.get('temp'); 
+     fd.cas8__currenttemperature__c=fd32;
+     messaging.SingleEmailMessage mai=new messaging.SingleEmailMessage();
+  string[] toaddresses=new string[]{'ruchika22300@gmail.com'};
+       string[] ccaddresses=new string[]{'dakshs40@gmail.com'};
+           mai.settoaddresses(toaddresses);
+           mai.setccaddresses(ccaddresses);
+          mai.setreplyto('shubhambhargava200@gmail.com');
+  mai.setsenderdisplayname('shubhams request');
+  mai.setsubject('please answer daksh quetuion: temperature is'+fd32);
+  mai.setusesignature(false);
+  mai.setplaintextbody('bye');
+  messaging.sendemail(new messaging.singleemailmessage[]{mai});
+     update fd;
+ }
+}
