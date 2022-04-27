@@ -1,0 +1,51 @@
+in postman instgall quickbook collection and in authorization section select oauth2-
+Token Name-new
+Grant Type-Callback URL
+https://www.getpostman.com/oauth2/callback
+Authorize using browser
+Auth URL-https://appcenter.intuit.com/connect/oauth2
+Access Token URL-https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer
+Client ID-ABtXCZEFH3XbqTFeCiL7jbK5nFIdv4TDlabOYBnQZjFKLpGOxg
+Client Secret-6AXCRnkNrBU4p4MDFqWknzywnscAXZLCdY1rNCEz
+Scope-com.intuit.quickbooks.accounting
+State-profile
+Client Authentication-send credential in body
+you will get the access token 
+
+now with this access token in apex classs you can call the quickbook api to create an customer when an account is inserted in your salesforce app.
+apex class -
+public class quickbook
+{ @future(callout=true)
+ public static void quick(Id i)    
+ {
+    Account ac = [Select name from Account where id =: i];
+  
+    HttpRequest req = new HttpRequest();
+    HttpResponse res = new HttpResponse();
+    Http http = new Http();
+
+    req.setEndpoint('https://sandbox-quickbooks.api.intuit.com/v3/company/4620816365219490080/customer?minorversion=40');
+    req.setMethod('POST');
+     req.setBody('{"DisplayName":"'+ac.name+'"}');
+     req.setHeader('Accept','Application/json');
+     req.setHeader('Content-Type','Application/json');
+     req.setHeader('Authorization','bearer eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..SprRjTalXmjAkSqQ0r6cHg.IfXiufNTPoB8uce8j495H6P0ZwtDeHN_3-7-Iw_cMY7Bh1pRC4MKe4ppQqPe6f_xVdLWhIIlvdJcmwO37mlr1GwDsXutR3jFPjIrFQERFmEmRj4mnNM54b2GV8YdRMnb3yAKvx_ivxq_sSJBu9H1JK0uCzGMJ8SS204nBiyPogpX2e47lABAA5pzs8292oER6wavHHZ_cCKb1jcYnzEq3RYl6yRkpp3kuBOLsl777AzkDMfhS4rOf64QV0o2jAp4I9NRQmm4OHA5D08RhMJmCm4CrP3MY7fdQmb7l17g-_HxsmKbCiO8xffrilSQSYef4hyqGc1ZLV7Nw1iBaBF3wWOOyBuPW0gMRHXxSdK3dYp-pjUSOpucgRqt4fgwfPKXV7qoyREZH6p_TMaglCmDM6SW6eDQpE8xPAdbkCQ_99KUAlnsq7jC9Kw9_LP5Sj4b8cl_jIFumn9wjg80H7qyr48DdBADLhNa1M_ycWWXjsriJzPE4PToTUAFu5c6SJn1SGOB1w_Z0pfTlXpUgaAzfW12gky57ijUF-IruHxp_H06G533KBjgQliT6r9ZuNYmXkqJ9YXZWqO2WeDUOmJ3htpq1En2e7wzzrzsgjZSCE_QeQOz9Lkuwhq336oMb0DKvpMKWIFnurYhbepKAQNFGKUoGjg3zTAtE_rUpJUpX4EeBegVxQrPnl_aunxqJhOS7i2JfwttKLo-mfxk2IcVpuFxclNrz1sTYvnWlBtu-osrC6nY1tedtUtWG8GoD4gS.maPcT_cEPeuAFGLP4z82fg');
+  
+
+    try {
+        res = http.send(req);
+    } catch(System.CalloutException e) {
+        System.debug('Callout error: '+ e);
+        System.debug(res.toString());
+    }
+
+}
+     
+     
+     
+ }
+ apex trigger-
+ trigger quick on Account (after insert) {
+  Id x =trigger.new[0].id;
+    quickbook.quick(x);
+}
